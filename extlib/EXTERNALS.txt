@@ -1,0 +1,10 @@
+
+Libraries that were developed outside are not included in this repository.
+Sucks, I know, but I try to combat sketchy copy-paste spam.
+
+These external libraries needed to build this thing go to the "extlib"
+directory (where this file lives).
+
+ - LodePNG <http://lodev.org/lodepng/>
+   lodepng.cpp, lodepng.h
+
