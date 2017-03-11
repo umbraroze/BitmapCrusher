@@ -6,14 +6,19 @@
 
 // Standard stuff
 #include <iostream>
-#include <iomanip>
+//#include <iomanip>
 #include <sstream>
 #include <string>
+#include <cstring>
 #include <cstdlib>
 #include <cstdint>
 #include <vector>
 
+/***************************************************************************/
+
 typedef std::vector<unsigned char> image_data;
+
+/***************************************************************************/
 
 class Color {
 public:
@@ -42,39 +47,102 @@ std::string Color::to_string()
 {
 	std::stringbuf o;
 	std::ostream os(&o);
-	// Sorry this formatting sucks, C++ stream formatting
-	// is beyond my comprehension at the moment
-	os << std::setw(2) //<< std::setfill('0')
-		<< std:: hex
-		<< "#" << (int)r << " " << (int)g << " " << (int)b
-		<< std::setw(1) << std::dec
+	// Sorry for C snprintf, the C++ iomanip stuff made my head spin
+	// (and didn't work)
+	char hexcookie[7];
+	snprintf(hexcookie, 7, "%02x%02x%02x", r, g, b);
+	os << '#' << hexcookie
 		<< " (" << (int)r << "," << (int)g << "," << (int)b << ")";
 	return o.str();
 }
-typedef std::vector<Color> Palette;
-const Palette CGA_P0LO_PALETTE = {
-	{ 0x00, 0x00, 0x00 }, // 0 black
-	{ 0x00, 0xAA, 0xAA }, // 3 cyan
-	{ 0xAA, 0x00, 0xAA }, // 5 magenta
-	{ 0xAA, 0xAA, 0xAA }  // 7 light gray
+
+/***************************************************************************/
+
+typedef std::vector<Color> color_list;
+class Palette {
+public:
+	Palette();
+	Palette(std::string name, color_list entries);
+	bool compare_to(color_list& target);
+	std::string to_string();
+protected:
+	std::string name;
+	std::vector<Color> entries;
 };
-const Palette CGA_P0HI_PALETTE = {
-	{ 0x00, 0x00, 0x00 }, //  0 black
-	{ 0x55, 0xFF, 0xFF }, // 11 light cyan
-	{ 0xFF, 0x55, 0xFF }, // 13 light magenta
-	{ 0xFF, 0xFF, 0xFF }  // 15 white
+Palette::Palette() : name(""), entries() { }
+Palette::Palette(std::string name, color_list entries) :
+	name(name),
+	entries(entries) { }
+bool Palette::compare_to(color_list& target)
+{
+	// If the palette sizes don't match, the lists obviously don't
+	// match either.
+	if (entries.size() != target.size())
+		return false;
+	// Go through each colour in entries, and look up matching
+	// value in target. If it's not found in target, then
+	// bail out with false.
+	for (unsigned i = 0; i < entries.size(); i++) {
+		bool found = false;
+		for (unsigned j = 0; j < target.size(); j++) {
+			if (entries[i] == target[j])
+				found = true;
+		}
+		if (!found)
+			return false;
+	}
+	// Each colour in entries was found in target.
+	return true;
+}
+std::string Palette::to_string()
+{
+	std::stringbuf o;
+	std::ostream os(&o);
+	os << name << ", "
+		<< entries.size() << " colours (";
+	for (unsigned i = 0; i < entries.size(); i++) {
+		os << entries[i].to_string();
+		if (!(i == entries.size() - 1))
+			os << ", ";
+	}
+	os << ")";
+	return o.str();
+}
+Palette CGA_P0LO_PALETTE = {
+	"CGA Palette 0 Low",
+	{
+		{ 0x00, 0x00, 0x00 }, // 0 black
+		{ 0x00, 0xAA, 0x00 }, // 2 green
+		{ 0xAA, 0x00, 0x00 }, // 4 red
+		{ 0xAA, 0x55, 0x00 }  // 6 brown
+	}
 };
-const Palette CGA_P1LO_PALETTE = {
-	{ 0x00, 0x00, 0x00 }, // 0 black
-	{ 0x00, 0xAA, 0x00 }, // 2 green
-	{ 0xAA, 0x00, 0x00 }, // 4 red
-	{ 0xAA, 0x55, 0x00 }  // 6 brown
+Palette CGA_P0HI_PALETTE = {
+	"CGA Palette 0 High",
+	{
+		{ 0x00, 0x00, 0x00 }, //  0 black
+		{ 0x55, 0xFF, 0x55 }, // 10 light green
+		{ 0xFF, 0x55, 0x55 }, // 12 light red
+		{ 0xFF, 0xFF, 0x55 }  // 14 yellow
+	}
 };
-const Palette CGA_P1HI_PALETTE = {
-	{ 0x00, 0x00, 0x00 }, //  0 black
-	{ 0x55, 0xFF, 0x55 }, // 10 light green
-	{ 0xFF, 0x55, 0x55 }, // 12 light red
-	{ 0xFF, 0xFF, 0x55 }  // 14 yellow
+Palette CGA_P1LO_PALETTE = {
+	"CGA Palette 1 Low",
+	{
+		{ 0x00, 0x00, 0x00 }, // 0 black
+		{ 0x00, 0xAA, 0xAA }, // 3 cyan
+		{ 0xAA, 0x00, 0xAA }, // 5 magenta
+		{ 0xAA, 0xAA, 0xAA }  // 7 light gray
+	}
+};
+Palette CGA_P1HI_PALETTE = {
+	"CGA Palette 1 High",
+	{
+		{ 0x00, 0x00, 0x00 }, //  0 black
+		{ 0x55, 0xFF, 0xFF }, // 11 light cyan
+		{ 0xFF, 0x55, 0xFF }, // 13 light magenta
+		{ 0xFF, 0xFF, 0xFF }  // 15 white
+	}
 };
 enum PaletteTypes {
 	CGA_P0LO = 0, CGA_P0HI = 1,
@@ -88,6 +156,8 @@ const std::vector<*Palette> PALETTES = {
 	&CGA_P1HI_PALETTE
 };
 */
+
+/***************************************************************************/
 
 class BGIBitmap {
 public:
@@ -116,11 +186,13 @@ int BGIBitmap::palette_count() {
 	return 0;
 }
 
+/***************************************************************************/
+
 int main(int argc, char *argv[]) {
 	image_data image; //the raw pixels
 	unsigned width = 0;
 	unsigned height = 0;
-	std::vector<Color> seen_colors;
+	color_list seen_colors;
 
 	if (argc != 3) {
 		std::cerr << "Usage: " << argv[0] << " input.png output.pic" << std::endl;
@@ -137,14 +209,15 @@ int main(int argc, char *argv[]) {
 	if (error) std::cout << "PNG decoder error " << error << ": "
 		<< lodepng_error_text(error) << std::endl;
 
-	// the pixels are now in the vector "image", 4 bytes per pixel,
-	// ordered RGBARGBA..., use it as texture, draw it, ...
-
 	std::cout << "File decoded successfully." << std::endl;
 	std::cout << "Size: " << width << "x" << height << " pixels." << std::endl;
 
+	// Go through the pixel data and enumerate the colours in the image into the
+	// seen_colors vector.
 	for (unsigned i = 0; i < width*height; i += 4) {
-		Color c((uint8_t)image[i], (uint8_t)image[i+1], (uint8_t)image[i+2]);
+		// Note: we're going at 4 bytes at time, but only using 3 bytes of it
+		// because we ignore the alpha value.
+		Color c((uint8_t)image[i], (uint8_t)image[i + 1], (uint8_t)image[i + 2]);
 		if (seen_colors.size() == 0)
 			seen_colors.push_back(c); // If no colors are seen, add it as first
 		else {
@@ -165,7 +238,9 @@ int main(int argc, char *argv[]) {
 	for (unsigned i = 0; i < seen_colors.size(); i++) {
 		std::cout << " - " << seen_colors[i].to_string() << std::endl;
 	}
-
+	std::cout << CGA_P1HI_PALETTE.to_string() << std::endl;
+	std::cout << "Does this match the CGA1HI palette? " <<
+		(CGA_P1HI_PALETTE.compare_to(seen_colors) ? "Yes" : "No") << "." << std::endl;
 	return 0;
 }
 
