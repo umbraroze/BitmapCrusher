@@ -25,8 +25,8 @@ public:
 	Color();
 	Color(uint8_t r, uint8_t g, uint8_t b);
 	~Color();
-	bool operator==(Color c);
-	std::string to_string();
+	bool operator==(Color c) const;
+	std::string to_string() const;
 protected:
 	uint8_t r, g, b;
 };
@@ -37,13 +37,13 @@ Color::Color(uint8_t r, uint8_t g, uint8_t b) :
 Color::~Color()
 {
 }
-bool Color::operator==(Color c)
+bool Color::operator==(Color c) const
 {
 	if (r == c.r && g == c.g && b == c.b)
 		return true;
 	return false;
 }
-std::string Color::to_string()
+std::string Color::to_string() const
 {
 	std::stringbuf o;
 	std::ostream os(&o);
@@ -63,8 +63,8 @@ class Palette {
 public:
 	Palette();
 	Palette(std::string name, color_list entries);
-	bool compare_to(color_list& target);
-	std::string to_string();
+	bool operator==(color_list& target) const;
+	std::string to_string() const;
 protected:
 	std::string name;
 	std::vector<Color> entries;
@@ -73,7 +73,7 @@ Palette::Palette() : name(""), entries() { }
 Palette::Palette(std::string name, color_list entries) :
 	name(name),
 	entries(entries) { }
-bool Palette::compare_to(color_list& target)
+bool Palette::operator==(color_list& target) const
 {
 	// If the palette sizes don't match, the lists obviously don't
 	// match either.
@@ -94,7 +94,7 @@ bool Palette::compare_to(color_list& target)
 	// Each colour in entries was found in target.
 	return true;
 }
-std::string Palette::to_string()
+std::string Palette::to_string() const
 {
 	std::stringbuf o;
 	std::ostream os(&o);
@@ -108,7 +108,7 @@ std::string Palette::to_string()
 	os << ")";
 	return o.str();
 }
-Palette CGA_P0LO_PALETTE = {
+const Palette CGA_P0LO_PALETTE = {
 	"CGA Palette 0 Low",
 	{
 		{ 0x00, 0x00, 0x00 }, // 0 black
@@ -117,7 +117,7 @@ Palette CGA_P0LO_PALETTE = {
 		{ 0xAA, 0x55, 0x00 }  // 6 brown
 	}
 };
-Palette CGA_P0HI_PALETTE = {
+const Palette CGA_P0HI_PALETTE = {
 	"CGA Palette 0 High",
 	{
 		{ 0x00, 0x00, 0x00 }, //  0 black
@@ -126,7 +126,7 @@ Palette CGA_P0HI_PALETTE = {
 		{ 0xFF, 0xFF, 0x55 }  // 14 yellow
 	}
 };
-Palette CGA_P1LO_PALETTE = {
+const Palette CGA_P1LO_PALETTE = {
 	"CGA Palette 1 Low",
 	{
 		{ 0x00, 0x00, 0x00 }, // 0 black
@@ -135,7 +135,7 @@ Palette CGA_P1LO_PALETTE = {
 		{ 0xAA, 0xAA, 0xAA }  // 7 light gray
 	}
 };
-Palette CGA_P1HI_PALETTE = {
+const Palette CGA_P1HI_PALETTE = {
 	"CGA Palette 1 High",
 	{
 		{ 0x00, 0x00, 0x00 }, //  0 black
@@ -148,14 +148,13 @@ enum PaletteTypes {
 	CGA_P0LO = 0, CGA_P0HI = 1,
 	CGA_P1LO = 2, CGA_P1HI = 3
 };
-/*
-const std::vector<*Palette> PALETTES = {
-	&CGA_P0LO_PALETTE,
-	&CGA_P0HI_PALETTE,
-	&CGA_P1LO_PALETTE,
-	&CGA_P1HI_PALETTE
+
+const std::vector<Palette> PALETTES = {
+	CGA_P0LO_PALETTE,
+	CGA_P0HI_PALETTE,
+	CGA_P1LO_PALETTE,
+	CGA_P1HI_PALETTE
 };
-*/
 
 /***************************************************************************/
 
@@ -240,7 +239,7 @@ int main(int argc, char *argv[]) {
 	}
 	std::cout << CGA_P1HI_PALETTE.to_string() << std::endl;
 	std::cout << "Does this match the CGA1HI palette? " <<
-		(CGA_P1HI_PALETTE.compare_to(seen_colors) ? "Yes" : "No") << "." << std::endl;
+		(CGA_P1HI_PALETTE == seen_colors ? "Yes" : "No") << "." << std::endl;
 	return 0;
 }
 
