@@ -1,6 +1,8 @@
 [package]
 name = "bitmap_crusher"
 version = "0.1.0"
-authors = ["Urpo Lankinen <wwwwolf@iki.fi>"]
+authors = ["Rose Midford <wwwwolf@iki.fi>"]
 
 [dependencies]
+png = "0.15.0"
+arguments = "0.6.2"

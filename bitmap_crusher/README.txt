@@ -76,3 +76,29 @@ need 2 bits per pixel, so a byte will fit 4 pixels. I don't know what
 happens if we're dealing with non-multiples-of-4 image region widths.
 Strangely aligned data, most likely.
 
+
+
+CGA colour palettes
+-------------------
+
+Palette 0 Low:   0,  2,  4,  6 (black, green, red, brown)
+          High:  0, 10, 12, 14 (black, lt.green, lt.red, yellow)
+        1 Low:   0,  3,  5,  7 (black, cyan, magenta, lt.gray)
+          High:  0, 11, 13, 15 (black, lt.cyan, lt.magenta, white)
+
+		{ 0x00, 0x00, 0x00 }  // 0 black
+		{ 0x00, 0x00, 0xAA }  // 1 blue
+		{ 0x00, 0xAA, 0x00 }  // 2 green
+		{ 0x00, 0xAA, 0xAA }  // 3 cyan
+		{ 0xAA, 0x00, 0x00 }  // 4 red
+		{ 0xAA, 0x00, 0xAA }  // 5 magenta
+		{ 0xAA, 0x55, 0x00 }  // 6 brown
+		{ 0xAA, 0xAA, 0xAA }  // 7 light gray
+		{ 0x55, 0x55, 0x55 }  // 8 dark gray
+		{ 0x55, 0x55, 0xFF }  // 9 light blue
+		{ 0x55, 0xFF, 0x55 }  // 10 light green
+		{ 0x55, 0xFF, 0xFF }  // 11 light cyan
+		{ 0xFF, 0x55, 0x55 }  // 12 light red
+		{ 0xFF, 0x55, 0xFF }  // 13 light magenta
+		{ 0xFF, 0xFF, 0x55 }  // 14 yellow
+		{ 0xFF, 0xFF, 0xFF }  // 15 white
