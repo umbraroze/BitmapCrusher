@@ -10,6 +10,12 @@ fn compare_colour(a:&Colour,b:&Colour) -> bool {
 	return a.0 == b.0 && a.1 == b.1 && a.2 == b.2;
 }
 
+struct Image {
+	width: u32,
+	height: u32,
+	rgba_data: Vec<u8>
+}
+
 fn load_png(input_file_name: String) -> (u32,u32,Vec<u8>) {
 	let decoder = png::Decoder::new(File::open(input_file_name).unwrap());
 	let (info, mut reader) = decoder.read_info().unwrap();
@@ -49,10 +55,14 @@ const MODES: [Mode; 4] = [
 	Mode( 0, 3, 5, 7), // P1Lo: black, cyan, magenta, lt.gray
 	Mode( 0,11,13,15)  // P1Hi: black, lt.cyan, lt.magenta, white
 ];
+enum GraphicsMode {
+	P0LO, P0HI, P1LO, P1HI
+}
 
 fn to_indexed(data: &Vec<u8>) -> Vec<u8> {
-	assert_eq!(data.len() % 4, 0,
-		"Data size not divisible by 4 (not RGBA image???)");
+	if data.len() % 4 != 0 {
+		panic!("Data size not divisible by 4 (not RGBA image???)");
+	}
 	let l = data.len()/4;
 	let mut converted = vec![0 as u8; l];
 	for n in 0..l {
@@ -70,9 +80,10 @@ fn to_indexed(data: &Vec<u8>) -> Vec<u8> {
 				break;
 			}
 		}
-		assert_ne!(cidx,16,
-			"Pixel {} offset {}, colour not in palette: #{:02X}{:02X}{:02X}",
-			n, dp, p.0,p.1,p.2);
+		if cidx == 16 {
+			panic!("Pixel {} offset {}, colour not in palette: #{:02X}{:02X}{:02X}",
+				n, dp, p.0,p.1,p.2);
+		}
 		converted[n] = cidx;
 	}
 	return converted;
@@ -96,6 +107,7 @@ fn match_palette() {
 
 }
 
+
 fn main() {
 	let arguments = std::env::args();
 	let arguments = arguments::parse(arguments).unwrap();
@@ -105,8 +117,9 @@ fn main() {
 		(_) => true;
 	}*/ let dump_bitmap = false; // FIXME
 
-	assert_eq!(arguments.orphans.len(), 2,
-		"Usage: {} input.png output.pic", arguments.program);
+	if arguments.orphans.len() != 2 {
+		panic!("Usage: {} input.png output.pic", arguments.program);
+	}
 	let input_file = (&arguments.orphans[0]).to_string();
 	let output_file = (&arguments.orphans[1]).to_string();
 	println!("Input file: {}",input_file);
@@ -131,4 +144,7 @@ fn main() {
 	}
 	let found_colours = find_colours(&paletted);
 	println!("Found {} colours: {:?}",found_colours.len(),found_colours);
+	if found_colours.len() > 4 {
+		panic!("Can only deal with 4 colour images.");
+	}
 }
