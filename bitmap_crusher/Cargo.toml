@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 png = "0.15.0"
 arguments = "0.6.2"
+# hexdump = "0.1.0"
