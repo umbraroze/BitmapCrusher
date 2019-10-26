@@ -115,5 +115,21 @@ impl Image {
 	pub fn match_palette() {
 
 	}
+	pub fn dump_bitmap(&self) {
+		for y in 0..self.height {
+			for x in 0..self.width {
+				let i = (y*self.width+x) as usize;
+				let ch = self.p_data[i];
+				if ch < 8 {
+					print!("\x1b[{}m",40+ch);
+				} else {
+					print!("\x1b[{}m",100+ch-8);
+				}
+				print!("{:02X}",ch);
+			}
+			print!("\x1b[m");
+			println!("");
+		}
+	}
 }
 

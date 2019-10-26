@@ -5,7 +5,8 @@ use cga_image::Image;
 fn main() {
 	let arguments = std::env::args();
 	let arguments = arguments::parse(arguments).unwrap();
-	/*let dump_bitmap = arguments.get::<bool>("dump-bitmap");
+	/*
+	let dump_bitmap = arguments.get::<bool>("dump-bitmap");
 	let dump_bitmap = match dump_bitmap {
 		None => false;
 		(_) => true;
@@ -23,14 +24,7 @@ fn main() {
 	println!("{}x{}, {} bytes.", image.width, image.height, image.rgba_data.len());
 	println!("Paletted image size: {}",image.p_data.len());
 	if dump_bitmap {
-		for y in 0..image.height {
-			for x in 0..image.width {
-				let i = (y*image.width+x) as usize;
-				let ch = image.p_data[i];
-				print!("{:02X}",ch);
-			}
-			println!();
-		}
+		image.dump_bitmap();
 	}
 	let found_colours = image.find_colours();
 	println!("Found {} colours: {:?}",found_colours.len(),found_colours);
