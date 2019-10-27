@@ -12,6 +12,14 @@ names for the bitmaps, so entire project's graphics can be converted at once.
 The program will output images as either binary files or as a Turbo Pascal
 unit source code (so graphics can be nicely packed inside your executable).
 
+I originally wanted to write this in Turbo Pascal itself, but the problem is
+that TP doesn't exactly handle modern image formats too well. I tried parsing
+XPM bitmaps, but XPM data itself varies by encoder and it would have needed
+some serious trickery to get right. I tried both the bit twiddling and using
+the actual graphics commands to draw the XPM on screen and then dumping it with
+GetImage, but the solutions really weren't optimal. I wanted to write this in
+C++ to get some exercise in that language, but heck, I thought I'd learn
+Rust instead.
 
 BGI bitmap documentation
 ------------------------
@@ -24,7 +32,7 @@ sub-bitmaps, tiles or sprites). They can, of course, be used to
 fetch entire screens too, but the PutImage procedure has interesting
 options for outputting these image regions (including XORing for
 rudimentary graphics trickery). The other two procedures are GetImage
-(fetch an image region to a buffer) and ImageSIze (determine the
+(fetch an image region to a buffer) and ImageSize (determine the
 storage space needed for a given image region).
 
 There's no actual strict technical definition of BGI bitmap structure in
@@ -61,7 +69,8 @@ In other words, my best guess of what the BGI bitmap looks like is this:
 I'm particularly confused by contradicting definitions in these function
 descriptions; GetImage doesn't mention anything about the image attributes.
 My only real option is to practically try out the function and see what it
-outputs.
+outputs. At least for CGI 4-colour images, there are no attributes that
+I could see.
 
 Image data itself shouldn't be difficult to figure out: it's identical to how
 the image data is stored in video memory, and is therefore video mode
@@ -86,19 +95,68 @@ Palette 0 Low:   0,  2,  4,  6 (black, green, red, brown)
         1 Low:   0,  3,  5,  7 (black, cyan, magenta, lt.gray)
           High:  0, 11, 13, 15 (black, lt.cyan, lt.magenta, white)
 
-		{ 0x00, 0x00, 0x00 }  // 0 black
-		{ 0x00, 0x00, 0xAA }  // 1 blue
-		{ 0x00, 0xAA, 0x00 }  // 2 green
-		{ 0x00, 0xAA, 0xAA }  // 3 cyan
-		{ 0xAA, 0x00, 0x00 }  // 4 red
-		{ 0xAA, 0x00, 0xAA }  // 5 magenta
-		{ 0xAA, 0x55, 0x00 }  // 6 brown
-		{ 0xAA, 0xAA, 0xAA }  // 7 light gray
-		{ 0x55, 0x55, 0x55 }  // 8 dark gray
-		{ 0x55, 0x55, 0xFF }  // 9 light blue
-		{ 0x55, 0xFF, 0x55 }  // 10 light green
-		{ 0x55, 0xFF, 0xFF }  // 11 light cyan
-		{ 0xFF, 0x55, 0x55 }  // 12 light red
-		{ 0xFF, 0x55, 0xFF }  // 13 light magenta
-		{ 0xFF, 0xFF, 0x55 }  // 14 yellow
-		{ 0xFF, 0xFF, 0xFF }  // 15 white
+		#000000  0 black
+		#0000AA  1 blue
+		#00AA00  2 green
+		#00AAAA  3 cyan
+		#AA0000  4 red
+		#AA00AA  5 magenta
+		#AA5500  6 brown
+		#AAAAAA  7 light gray
+		#555555  8 dark gray
+		#5555FF  9 light blue
+		#55FF55 10 light green
+		#55FFFF 11 light cyan
+		#FF5555 12 light red
+		#FF55FF 13 light magenta
+		#FFFF55 14 yellow
+		#FFFFFF 15 white
+
+
+Example image
+-------------
+
+Here's an example 16x16 image. Each number represents a palette value.
+Picture was originally in Palette 1 High, for what it's worth.
+
+  0000000000000000
+  0000000003333330
+  0033333003111130
+  0000300003133330
+  0000300003113000
+  0000300003133330
+  0000300003111130
+  0000000003333330
+  0033333000000000
+  0322222303333330
+  0323333303000030
+  0322222303330330
+  0033332300030300
+  0322222300030300
+  0033333000033300
+  0000000000000000
+
+This is a hex dump of the image as it was got by GetImage, with some
+commentary.
+
+  0f 00     // width: u16 = 16
+  0f 00     // height: u16 = 16
+  00 00     // reserved: u16 = 0
+  // image data, 4 bytes per 16 pixels of width * 16 lines of height
+  00 00 00 00 
+  3f fc 0f fc
+  35 5c 00 c0
+  37 fc 00 c0
+  35 c0 00 c0
+  37 fc 00 c0
+  35 5c 00 00 
+  3f fc 0f fc 
+  00 00 3a ab 
+  3f fc 3b ff 
+  30 0c 3a ab 
+  3f 3c 0f fb 
+  03 30 3a ab 
+  03 30 0f fc 
+  03 f0 00 00 
+  00 00 00 00
+
