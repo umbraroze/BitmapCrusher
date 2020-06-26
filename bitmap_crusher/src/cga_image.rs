@@ -46,9 +46,9 @@ pub const MODES: [Mode; 4] = [
 	Mode( 0, 3, 5, 7), // P1Lo: black, cyan, magenta, lt.gray
 	Mode( 0,11,13,15)  // P1Hi: black, lt.cyan, lt.magenta, white
 ];
-pub enum GraphicsMode {
-	P0LO, P0HI, P1LO, P1HI
-}
+pub const GRAPHICS_MODE_NAMES: [&str; 4] = [
+	"Palette 0 Low", "Palette 0 High", "Palette 1 Low", "Palette 1 High"
+];
 
 #[derive(Eq,PartialEq,PartialOrd)]
 pub struct Colour(u8,u8,u8);
@@ -58,7 +58,13 @@ impl Display for Colour {
     }
 }
 
+#[derive(Eq,PartialEq,PartialOrd)]
 pub struct Mode(u8,u8,u8,u8);
+impl Display for Mode {
+	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "[Colours: {} {} {} {}]", self.0, self.1, self.2, self.3)
+    }
+}
 
 pub struct Image {
 	pub width: u32,
@@ -151,10 +157,22 @@ impl Image {
 				result.push(self.p_data[i]);
 			}
 		}
+		result.sort();
 		return result;
 	}
-	pub fn match_palette() {
-
+	pub fn colours_to_mode(colours: Vec<u8>) -> Mode {
+		assert_eq!(colours.len(),4,
+			"Palette size not 4, can't convert to a mode");
+		let result = Mode(colours[0],colours[1],colours[2],colours[3]);
+		return result;
+	}
+	pub fn match_palette(mode: Mode) -> Option<usize> {
+		for i in 0..MODES.len() {
+			if mode == MODES[i] {
+				return Some(i);
+			}
+		};
+		return None;
 	}
 	pub fn dump_bitmap(&self, ansi_colours: bool) {
 		for y in 0..self.height {

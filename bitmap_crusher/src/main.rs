@@ -3,6 +3,16 @@ mod cga_image;
 use cga_image::Image;
 extern crate arguments;
 
+fn usage(program: &str) {
+	eprintln!();
+	eprintln!("Usage: {} [--dump-bitmap] [--ansi-dump] input.png output.pic",
+		program);
+	eprintln!("  --dump-bitmap true: Also print out the bitmap as bytes.");
+	eprintln!("  --ansi-dump true: Use ANSI terminal colour with the dump.");
+	eprintln!();
+	panic!();
+}
+
 fn main() {
 	// Parse command line arguments
 	let arguments = std::env::args();
@@ -18,7 +28,7 @@ fn main() {
 		_ => ansi_dump.unwrap()
 	};
 	if arguments.orphans.len() != 2 {
-		panic!("Usage: {} input.png output.pic", arguments.program);
+		usage(&arguments.program);
 	}
 	let input_file = (&arguments.orphans[0]).to_string();
 	let output_file = (&arguments.orphans[1]).to_string();
@@ -29,6 +39,9 @@ fn main() {
 	let image = Image::from_png(input_file);
 	println!("{}x{}, {} bytes.", image.width, image.height, image.rgba_data.len());
 	println!("Paletted image size: {}",image.p_data.len());
+	if image.p_data.len() % 4 != 0 {
+		panic!("Can currently only handle images that align in 4 pixels.");
+	}
 	// Dump bitmap if so desired
 	if dump_bitmap {
 		image.dump_bitmap(ansi_dump);
@@ -38,5 +51,15 @@ fn main() {
 	println!("Found {} colours: {:?}",found_colours.len(),found_colours);
 	if found_colours.len() > 4 {
 		panic!("Can only deal with 4 colour images.");
+	}
+	// Find the palette
+	let candidate_mode = Image::colours_to_mode(found_colours);
+	let pidx = Image::match_palette(candidate_mode);
+	match pidx {
+		None => panic!("The image has an invalid combo of colours in palette."),
+		Some(x) => {
+			println!("Palette used in image: {} (mode {})",
+				cga_image::GRAPHICS_MODE_NAMES[x],x);
+		}
 	}
 }
