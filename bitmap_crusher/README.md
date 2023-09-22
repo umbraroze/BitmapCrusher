@@ -1,6 +1,5 @@
 
-Bitmap Crusher
-==============
+# Bitmap Crusher
 
 This program will convert PNG bitmaps to BGI (Borland Graphics Interface)
 format in Turbo Pascal 7 for DOS. The first phase of development is meant
@@ -21,8 +20,7 @@ GetImage, but the solutions really weren't optimal. I wanted to write this in
 C++ to get some exercise in that language, but heck, I thought I'd learn
 Rust instead.
 
-BGI bitmap documentation
-------------------------
+## BGI bitmap documentation
 
 Turbo Pascal BGI doesn't support loading or saving images directly;
 image data can practically come from anywhere you want.
@@ -44,27 +42,29 @@ Here's what "Turbo Pascal Version 7.0 Programmer's Reference" has to say
 about two BGI procedures, GetImage (p. 70) and ImageSize (p. 88).
 
 GetImage:
-  BitMap is an untyped parameter that must be greater than or equal to 6
-  plus the amount of area defined by the region. The first two words
-  of BitMap store the width and height of the region. The third word
-  is reserved. The remaining part of BitMap is used to save the bit image
-  itself. [...] The memory required to save the region must be less than
-  64K.
+
+> BitMap is an untyped parameter that must be greater than or equal to 6
+> plus the amount of area defined by the region. The first two words
+> of BitMap store the width and height of the region. The third word
+> is reserved. The remaining part of BitMap is used to save the bit image
+> itself. \[...\] The memory required to save the region must be less than
+> 64K.
 
 ImageSize:
-  ImageSize determines the number of bytes necessary for GetImage to save
-  the specified region of the screen. The image size includes space for
-  several words. The first stores the width of the region, and the second
-  stores the height. The next words store the attributes of the image
-  itself. The last word is reserved.
+
+> ImageSize determines the number of bytes necessary for GetImage to save
+> the specified region of the screen. The image size includes space for
+> several words. The first stores the width of the region, and the second
+> stores the height. The next words store the attributes of the image
+> itself. The last word is reserved.
 
 In other words, my best guess of what the BGI bitmap looks like is this:
 
-  u16 width
-  u16 height
-  u16 mode-dependant attribute flags, maybe, maybe not???
-  u16 reserved
-  image data...
+* u16 width
+* u16 height
+* u16 mode-dependant attribute flags, maybe, maybe not???
+* u16 reserved
+* image data...
 
 I'm particularly confused by contradicting definitions in these function
 descriptions; GetImage doesn't mention anything about the image attributes.
@@ -85,78 +85,72 @@ need 2 bits per pixel, so a byte will fit 4 pixels. I don't know what
 happens if we're dealing with non-multiples-of-4 image region widths.
 Strangely aligned data, most likely.
 
+## CGA colour palettes
 
+    Palette 0 Low:   0,  2,  4,  6 (black, green, red, brown)
+              High:  0, 10, 12, 14 (black, lt.green, lt.red, yellow)
+            1 Low:   0,  3,  5,  7 (black, cyan, magenta, lt.gray)
+              High:  0, 11, 13, 15 (black, lt.cyan, lt.magenta, white)
 
-CGA colour palettes
--------------------
+    #000000  0 black
+    #0000AA  1 blue
+    #00AA00  2 green
+    #00AAAA  3 cyan
+    #AA0000  4 red
+    #AA00AA  5 magenta
+    #AA5500  6 brown
+    #AAAAAA  7 light gray
+    #555555  8 dark gray
+    #5555FF  9 light blue
+    #55FF55 10 light green
+    #55FFFF 11 light cyan
+    #FF5555 12 light red
+    #FF55FF 13 light magenta
+    #FFFF55 14 yellow
+    #FFFFFF 15 white
 
-Palette 0 Low:   0,  2,  4,  6 (black, green, red, brown)
-          High:  0, 10, 12, 14 (black, lt.green, lt.red, yellow)
-        1 Low:   0,  3,  5,  7 (black, cyan, magenta, lt.gray)
-          High:  0, 11, 13, 15 (black, lt.cyan, lt.magenta, white)
-
-		#000000  0 black
-		#0000AA  1 blue
-		#00AA00  2 green
-		#00AAAA  3 cyan
-		#AA0000  4 red
-		#AA00AA  5 magenta
-		#AA5500  6 brown
-		#AAAAAA  7 light gray
-		#555555  8 dark gray
-		#5555FF  9 light blue
-		#55FF55 10 light green
-		#55FFFF 11 light cyan
-		#FF5555 12 light red
-		#FF55FF 13 light magenta
-		#FFFF55 14 yellow
-		#FFFFFF 15 white
-
-
-Example image
--------------
+## Example image
 
 Here's an example 16x16 image. Each number represents a palette value.
 Picture was originally in Palette 1 High, for what it's worth.
 
-  0000000000000000
-  0000000003333330
-  0033333003111130
-  0000300003133330
-  0000300003113000
-  0000300003133330
-  0000300003111130
-  0000000003333330
-  0033333000000000
-  0322222303333330
-  0323333303000030
-  0322222303330330
-  0033332300030300
-  0322222300030300
-  0033333000033300
-  0000000000000000
+    0000000000000000
+    0000000003333330
+    0033333003111130
+    0000300003133330
+    0000300003113000
+    0000300003133330
+    0000300003111130
+    0000000003333330
+    0033333000000000
+    0322222303333330
+    0323333303000030
+    0322222303330330
+    0033332300030300
+    0322222300030300
+    0033333000033300
+    0000000000000000
 
 This is a hex dump of the image as it was got by GetImage, with some
 commentary.
 
-  0f 00     // width: u16 = 16
-  0f 00     // height: u16 = 16
-  00 00     // reserved: u16 = 0
-  // image data, 4 bytes per 16 pixels of width * 16 lines of height
-  00 00 00 00 
-  3f fc 0f fc
-  35 5c 00 c0
-  37 fc 00 c0
-  35 c0 00 c0
-  37 fc 00 c0
-  35 5c 00 00 
-  3f fc 0f fc 
-  00 00 3a ab 
-  3f fc 3b ff 
-  30 0c 3a ab 
-  3f 3c 0f fb 
-  03 30 3a ab 
-  03 30 0f fc 
-  03 f0 00 00 
-  00 00 00 00
-
+    0f 00     // width: u16 = 16
+    0f 00     // height: u16 = 16
+    00 00     // reserved: u16 = 0
+    // image data, 4 bytes per 16 pixels of width * 16 lines of height
+    00 00 00 00 
+    3f fc 0f fc
+    35 5c 00 c0
+    37 fc 00 c0
+    35 c0 00 c0
+    37 fc 00 c0
+    35 5c 00 00 
+    3f fc 0f fc 
+    00 00 3a ab 
+    3f fc 3b ff 
+    30 0c 3a ab 
+    3f 3c 0f fb 
+    03 30 3a ab 
+    03 30 0f fc 
+    03 f0 00 00 
+    00 00 00 00
