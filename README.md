@@ -1,24 +1,23 @@
 
-Turbo Pascal Moderniser
-=======================
+# Turbo Pascal Moderniser
 
 This repository contains some of the tools that are going to be extremely
 handy when developing things for Turbo Pascal 7.0. These were done primarily
 for my own needs.
 
-The tools were written in C++ using Visual Studio 2015 in as portable code
-as possible, though there are still Visual Studio-isms here that mean
-it won't build straight out of box or something.
+This is a very brainfarty old project that nevert got completed, and I
+hope to complete it now.
 
-PNG2BGI
--------
+The tools are (re)written in Rust. The C++ edition is pretty much abandoned
+and will be gone when I get the ducks in row.
+
+## bitmap_crusher
 
 This program will convert these newfangled "PNG" files, whatever they
 are, to raw BGI bitmaps that can be drawn with GRAPH.TPU's PutImage()
 procedure.
 
-BGI2TPU (not started yet)
--------
+## bitmap_uniter (or whatever, it's not started)
 
 This will wrap BGI bitmaps into constants within Turbo Pascal units.
 It takes a manifest and the BGI files referenced there in and spit
