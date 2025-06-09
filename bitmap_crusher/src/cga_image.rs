@@ -107,25 +107,23 @@ impl Image {
 	}
 	pub fn from_png(input_file_name: String) -> Image {
 		let decoder = png::Decoder::new(File::open(input_file_name).unwrap());
-		let (info, mut reader) = decoder.read_info().unwrap();
+		let mut reader = decoder.read_info().unwrap();
+		// Allocate the buffer
+		let mut buf = vec![0; reader.output_buffer_size()];
+		// Decode image
+		let info = reader.next_frame(&mut buf).unwrap();
 
 		assert_eq!(info.bit_depth,png::BitDepth::Eight,
 			"Only 8-bit images supported.");
 		// Determine how many bytes per pixel
 		let bpp: usize = match info.color_type {
-			png::ColorType::RGB => 3,
-			png::ColorType::RGBA => 4,
+			png::ColorType::Rgb => 3,
+			png::ColorType::Rgba => 4,
 			_ => panic!("Only RGB and RGBA images supported")
 		};
 		println!("Colour type: {:?}, {} bytes per pixel", info.color_type, bpp);
 
 		println!("Input image size: {}x{}",info.width,info.height);
-
-		// Allocate the buffer
-		let mut buf = vec![0; info.buffer_size()];
-
-		// Decode image
-		reader.next_frame(&mut buf).unwrap();
 
 		let expected_len: usize =
 			info.width as usize * info.height as usize * bpp;

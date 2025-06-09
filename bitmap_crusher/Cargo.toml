@@ -2,9 +2,9 @@
 name = "bitmap_crusher"
 version = "0.1.0"
 authors = ["Rose Midford <wwwwolf@iki.fi>"]
-edition = "2018"
+edition = "2024"
 
 [dependencies]
-png = "0.15.0"
-arguments = "0.6.2"
-# hexdump = "0.1.0"
+png = "0.17.16"
+arguments = "0.8.0"
+# hexdump = "0.1.2"

@@ -1,6 +1,7 @@
 
 mod cga_image;
 use cga_image::Image;
+mod palette;
 extern crate arguments;
 
 fn usage(program: &str) {
