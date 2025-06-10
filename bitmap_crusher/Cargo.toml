@@ -1,8 +1,9 @@
 [package]
 name = "bitmap_crusher"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Rose Midford <wwwwolf@iki.fi>"]
 edition = "2024"
+license = "MIT"
 
 [dependencies]
 png = "0.17.16"
