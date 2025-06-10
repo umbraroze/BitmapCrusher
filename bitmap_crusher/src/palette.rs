@@ -1,23 +1,23 @@
 
 use std::fmt::{self, Display, Formatter};
 
-pub const PALETTE: [Colour; 16] = [
-	Colour { r: 0x00, g: 0x00, b: 0x00, ansi_bg: 40 },   // 0 black
-	Colour { r: 0x00, g: 0x00, b: 0xAA, ansi_bg: 44 },   // 1 blue
-	Colour { r: 0x00, g: 0xAA, b: 0x00, ansi_bg: 42 },   // 2 green
-	Colour { r: 0x00, g: 0xAA, b: 0xAA, ansi_bg: 46 },   // 3 cyan
-	Colour { r: 0xAA, g: 0x00, b: 0x00, ansi_bg: 41 },   // 4 red
-	Colour { r: 0xAA, g: 0x00, b: 0xAA, ansi_bg: 45 },   // 5 magenta
-	Colour { r: 0xAA, g: 0x55, b: 0x00, ansi_bg: 43 },   // 6 brown
-	Colour { r: 0xAA, g: 0xAA, b: 0xAA, ansi_bg: 47 },   // 7 light gray
-	Colour { r: 0x55, g: 0x55, b: 0x55, ansi_bg: 100 },  // 8 dark gray
-	Colour { r: 0x55, g: 0x55, b: 0xFF, ansi_bg: 104 },  // 9 light blue
-	Colour { r: 0x55, g: 0xFF, b: 0x55, ansi_bg: 102 },  // 10 light green
-	Colour { r: 0x55, g: 0xFF, b: 0xFF, ansi_bg: 106 },  // 11 light cyan
-	Colour { r: 0xFF, g: 0x55, b: 0x55, ansi_bg: 101 },  // 12 light red
-	Colour { r: 0xFF, g: 0x55, b: 0xFF, ansi_bg: 105 },  // 13 light magenta
-	Colour { r: 0xFF, g: 0xFF, b: 0x55, ansi_bg: 103 },  // 14 yellow
-	Colour { r: 0xFF, g: 0xFF, b: 0xFF, ansi_bg: 107 }   // 15 white
+pub const PALETTE: [PaletteEntry; 16] = [
+	PaletteEntry { rgb_colour: Colour(0x00, 0x00, 0x00), ansi_bg: 40 },  // 0 black
+	PaletteEntry { rgb_colour: Colour(0x00, 0x00, 0xAA), ansi_bg: 44 },  // 1 blue
+	PaletteEntry { rgb_colour: Colour(0x00, 0xAA, 0x00), ansi_bg: 42 },  // 2 green
+	PaletteEntry { rgb_colour: Colour(0x00, 0xAA, 0xAA), ansi_bg: 46 },  // 3 cyan
+	PaletteEntry { rgb_colour: Colour(0xAA, 0x00, 0x00), ansi_bg: 41 },  // 4 red
+	PaletteEntry { rgb_colour: Colour(0xAA, 0x00, 0xAA), ansi_bg: 45 },  // 5 magenta
+	PaletteEntry { rgb_colour: Colour(0xAA, 0x55, 0x00), ansi_bg: 43 },  // 6 brown
+	PaletteEntry { rgb_colour: Colour(0xAA, 0xAA, 0xAA), ansi_bg: 47 },  // 7 light gray
+	PaletteEntry { rgb_colour: Colour(0x55, 0x55, 0x55), ansi_bg: 100 }, // 8 dark gray
+	PaletteEntry { rgb_colour: Colour(0x55, 0x55, 0xFF), ansi_bg: 104 }, // 9 light blue
+	PaletteEntry { rgb_colour: Colour(0x55, 0xFF, 0x55), ansi_bg: 102 }, // 10 light green
+	PaletteEntry { rgb_colour: Colour(0x55, 0xFF, 0xFF), ansi_bg: 106 }, // 11 light cyan
+	PaletteEntry { rgb_colour: Colour(0xFF, 0x55, 0x55), ansi_bg: 101 }, // 12 light red
+	PaletteEntry { rgb_colour: Colour(0xFF, 0x55, 0xFF), ansi_bg: 105 }, // 13 light magenta
+	PaletteEntry { rgb_colour: Colour(0xFF, 0xFF, 0x55), ansi_bg: 103 }, // 14 yellow
+	PaletteEntry { rgb_colour: Colour(0xFF, 0xFF, 0xFF), ansi_bg: 107 }  // 15 white
 ];
 pub const MODES: [Mode; 4] = [
 	Mode {
@@ -44,27 +44,28 @@ pub const MODES: [Mode; 4] = [
 ];
 
 #[derive(Eq,PartialEq,PartialOrd)]
-pub struct Colour {
-    r:u8,
-    g:u8,
-    b:u8,
-    ansi_bg:u8
-}
-impl Colour {
-    fn match_rgb(&self, r:u8, g:u8, b:u8) -> bool {
-        return self.r == r && self.g == g && self.b == b;
-    }
-}
+pub struct Colour(u8,u8,u8);
 impl Display for Colour {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "#{:02X}{:02X}{:02X}", self.r, self.g, self.b)
+        write!(f, "#{:02X}{:02X}{:02X}",self.0,self.1,self.2)
+    }
+}
+
+#[derive(Eq,PartialEq,PartialOrd)]
+pub struct PaletteEntry {
+    rgb_colour:Colour,
+    ansi_bg:u8
+}
+impl Display for PaletteEntry {
+	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{} (ANSI: {})",self.rgb_colour,self.ansi_bg)
     }
 }
 
 #[derive(Eq,PartialEq,PartialOrd)]
 pub struct Mode {
     name: &'static str,
-    colours: [&'static Colour;4],
+    colours: [&'static PaletteEntry;4],
 }
 impl Display for Mode {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
