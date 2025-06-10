@@ -1,7 +1,6 @@
 
 mod cga_image;
 use cga_image::Image;
-mod palette;
 extern crate arguments;
 
 fn usage(program: &str) {
@@ -54,13 +53,11 @@ fn main() {
 		panic!("Can only deal with 4 colour images.");
 	}
 	// Find the palette
-	let candidate_mode = Image::colours_to_mode(found_colours);
-	let pidx = Image::match_palette(candidate_mode);
+	let pidx = Image::match_palette(found_colours);
 	match pidx {
 		None => panic!("The image has an invalid combo of colours in palette."),
 		Some(x) => {
-			println!("Palette used in image: {} (mode {})",
-				cga_image::GRAPHICS_MODE_NAMES[x],x);
+			println!("Palette used in image: {}",cga_image::MODES[x]);
 		}
 	}
 }

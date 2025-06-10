@@ -4,65 +4,84 @@ extern crate png;
 use std::fs::File;
 use std::fmt::{self, Display, Formatter};
 
-pub const PALETTE: [Colour; 16] = [
-	Colour(0x00,0x00,0x00),  // 0 black
-	Colour(0x00,0x00,0xAA),  // 1 blue
-	Colour(0x00,0xAA,0x00),  // 2 green
-	Colour(0x00,0xAA,0xAA),  // 3 cyan
-	Colour(0xAA,0x00,0x00),  // 4 red
-	Colour(0xAA,0x00,0xAA),  // 5 magenta
-	Colour(0xAA,0x55,0x00),  // 6 brown
-	Colour(0xAA,0xAA,0xAA),  // 7 light gray
-	Colour(0x55,0x55,0x55),  // 8 dark gray
-	Colour(0x55,0x55,0xFF),  // 9 light blue
-	Colour(0x55,0xFF,0x55),  // 10 light green
-	Colour(0x55,0xFF,0xFF),  // 11 light cyan
-	Colour(0xFF,0x55,0x55),  // 12 light red
-	Colour(0xFF,0x55,0xFF),  // 13 light magenta
-	Colour(0xFF,0xFF,0x55),  // 14 yellow
-	Colour(0xFF,0xFF,0xFF)   // 15 white
-];
-pub const PALETTE_TO_ANSI_BG: [u8; 16] = [
-	40,  // 0 black
-	44,  // 1 blue
-	42,  // 2 green
-	46,  // 3 cyan
-	41,  // 4 red
-	45,  // 5 magenta
-	43,  // 6 yellow
-	47,  // 7 light grey
-	100, // 8 bright black
-	104, // 9 bright blue
-	102, // 10 bright blue
-	106, // 11 bright cyan
-	101, // 12 bright red
-	105, // 13 bright magenta
-	103, // 14 bright yellow
-	107, // 15 bright white
+pub const PALETTE: [PaletteEntry; 16] = [
+	PaletteEntry { rgb_colour: Colour(0x00, 0x00, 0x00), ansi_bg: 40 },  // 0 black
+	PaletteEntry { rgb_colour: Colour(0x00, 0x00, 0xAA), ansi_bg: 44 },  // 1 blue
+	PaletteEntry { rgb_colour: Colour(0x00, 0xAA, 0x00), ansi_bg: 42 },  // 2 green
+	PaletteEntry { rgb_colour: Colour(0x00, 0xAA, 0xAA), ansi_bg: 46 },  // 3 cyan
+	PaletteEntry { rgb_colour: Colour(0xAA, 0x00, 0x00), ansi_bg: 41 },  // 4 red
+	PaletteEntry { rgb_colour: Colour(0xAA, 0x00, 0xAA), ansi_bg: 45 },  // 5 magenta
+	PaletteEntry { rgb_colour: Colour(0xAA, 0x55, 0x00), ansi_bg: 43 },  // 6 brown
+	PaletteEntry { rgb_colour: Colour(0xAA, 0xAA, 0xAA), ansi_bg: 47 },  // 7 light gray
+	PaletteEntry { rgb_colour: Colour(0x55, 0x55, 0x55), ansi_bg: 100 }, // 8 dark gray
+	PaletteEntry { rgb_colour: Colour(0x55, 0x55, 0xFF), ansi_bg: 104 }, // 9 light blue
+	PaletteEntry { rgb_colour: Colour(0x55, 0xFF, 0x55), ansi_bg: 102 }, // 10 light green
+	PaletteEntry { rgb_colour: Colour(0x55, 0xFF, 0xFF), ansi_bg: 106 }, // 11 light cyan
+	PaletteEntry { rgb_colour: Colour(0xFF, 0x55, 0x55), ansi_bg: 101 }, // 12 light red
+	PaletteEntry { rgb_colour: Colour(0xFF, 0x55, 0xFF), ansi_bg: 105 }, // 13 light magenta
+	PaletteEntry { rgb_colour: Colour(0xFF, 0xFF, 0x55), ansi_bg: 103 }, // 14 yellow
+	PaletteEntry { rgb_colour: Colour(0xFF, 0xFF, 0xFF), ansi_bg: 107 }  // 15 white
 ];
 pub const MODES: [Mode; 4] = [
-	Mode( 0, 2, 4, 6), // P0Lo: black, green, red, brown 
-	Mode( 0,10,12,14), // P0Hi: black, lt.green, lt.red, yellow
-	Mode( 0, 3, 5, 7), // P1Lo: black, cyan, magenta, lt.gray
-	Mode( 0,11,13,15)  // P1Hi: black, lt.cyan, lt.magenta, white
-];
-pub const GRAPHICS_MODE_NAMES: [&str; 4] = [
-	"Palette 0 Low", "Palette 0 High", "Palette 1 Low", "Palette 1 High"
+	Mode {
+        name: "Palette 0 Low",
+		colour_indexes: [0,2,4,6],
+        //        black,       green,        red,          brown 
+        colours: [&PALETTE[0], &PALETTE[2],  &PALETTE[4],  &PALETTE[6]]
+    },
+	Mode {
+        name: "Palette 0 High",
+		colour_indexes: [0,10,12,14],
+        //        black,       lt.green,     lt.red,       yellow
+        colours: [&PALETTE[0], &PALETTE[10], &PALETTE[12], &PALETTE[14]]
+    }, 
+	Mode {
+        name: "Palette 1 Low", 
+		colour_indexes: [0,3,5,7],
+        //        black,       cyan,         magenta,      lt.gray
+        colours: [&PALETTE[0], &PALETTE[3],  &PALETTE[5],  &PALETTE[7]]
+    },
+	Mode {
+        name: "Palette 1 High",
+		colour_indexes: [0,11,13,15],
+        //        black,       lt.cyan,      lt.magenta,   white
+        colours: [&PALETTE[0], &PALETTE[11], &PALETTE[13], &PALETTE[15]]
+    }
 ];
 
 #[derive(Eq,PartialEq,PartialOrd)]
 pub struct Colour(u8,u8,u8);
 impl Display for Colour {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "#{:02X}{:02X}{:02X}", self.0, self.1, self.2)
+        write!(f, "#{:02X}{:02X}{:02X}",self.0,self.1,self.2)
     }
 }
 
 #[derive(Eq,PartialEq,PartialOrd)]
-pub struct Mode(u8,u8,u8,u8);
+pub struct PaletteEntry {
+    rgb_colour:Colour,
+    ansi_bg:u8
+}
+impl Display for PaletteEntry {
+	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{} (ANSI: {})",self.rgb_colour,self.ansi_bg)
+    }
+}
+
+#[derive(Eq,PartialEq,PartialOrd)]
+pub struct Mode {
+    name: &'static str,
+	colour_indexes: [u8;4],
+    colours: [&'static PaletteEntry;4],
+}
 impl Display for Mode {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "[Colours: {} {} {} {}]", self.0, self.1, self.2, self.3)
+        write!(f, "[{}, Colours: {},{},{},{} - {}, {}, {}, {}]",
+            self.name,
+			self.colour_indexes[0],self.colour_indexes[1],
+			self.colour_indexes[2],self.colour_indexes[3],
+            self.colours[0], self.colours[1],
+			self.colours[2], self.colours[3])
     }
 }
 
@@ -91,7 +110,7 @@ impl Image {
 			let mut cidx: u8 = 16;
 			for colour in 0..=15 {
 				let c = &PALETTE[colour];
-				if c == &p {
+				if &c.rgb_colour == &p {
 					cidx = colour as u8;
 					break;
 				}
@@ -158,16 +177,25 @@ impl Image {
 		result.sort();
 		return result;
 	}
-	pub fn colours_to_mode(colours: Vec<u8>) -> Mode {
+	pub fn match_palette(colours: Vec<u8>) -> Option<usize> {
 		assert_eq!(colours.len(),4,
 			"Palette size not 4, can't convert to a mode");
-		let result = Mode(colours[0],colours[1],colours[2],colours[3]);
-		return result;
-	}
-	pub fn match_palette(mode: Mode) -> Option<usize> {
+
+		// FIXME: This should be neater
 		for i in 0..MODES.len() {
-			if mode == MODES[i] {
-				return Some(i);
+			// Loop through colour indexes; if any of them is different,
+			// quit trying.
+			let mut found_difference = false;
+			'colors: for c in 0..3 as usize {
+				if !found_difference && MODES[i].colour_indexes[c] != colours[c] {
+					// We found a difference!
+					found_difference = true;
+					break 'colors;
+				}
+			}
+			// If we 
+			if !found_difference {
+				return Some(i)
 			}
 		};
 		return None;
@@ -178,7 +206,7 @@ impl Image {
 				let i = (y*self.width+x) as usize;
 				let ch = self.p_data[i];
 				if ansi_colours {
-					print!("\x1b[{}m",PALETTE_TO_ANSI_BG[ch as usize]);
+					print!("\x1b[{}m",PALETTE[ch as usize].ansi_bg);
 				}
 				print!("{:02X}",ch);
 			}
